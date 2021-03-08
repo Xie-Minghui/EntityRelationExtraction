@@ -1,0 +1,2 @@
+# EntityRelationExtraction
+实体关系抽取pipline方式
