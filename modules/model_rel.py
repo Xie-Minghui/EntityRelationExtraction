@@ -11,14 +11,18 @@ file description:：
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from utils.config_rel import USE_CUDA
 
-torch.manual_seed(1)  # 使用相同的初始化种子，保证每次初始化结果一直，便于调试
+def setup_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)   # 使用相同的初始化种子，保证每次初始化结果一直，便于调试
 
 
 class Attention(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.query = nn.Parameter(torch.randn(config.batch_size, 1, config.hidden_dim_lstm*2))  # [batch, 1, hidden_dim]
+        setup_seed(1)
+        self.query = nn.Parameter(torch.randn(1, config.hidden_dim_lstm*2))  # [batch, 1, hidden_dim]
     
     def forward(self, H):
         M = torch.tanh(H)  # H [batch_size, sentence_length, hidden_dim_lstm]
@@ -33,6 +37,7 @@ class Attention(nn.Module):
 class AttBiLSTM(nn.Module):
     def __init__(self, config, embedding_pre=None):
         super().__init__()
+        setup_seed(1)
         self.embedding_dim = config.embedding_dim
         self.vocab_size = config.vocab_size
         self.hidden_dim = config.hidden_dim_lstm
@@ -56,7 +61,7 @@ class AttBiLSTM(nn.Module):
         self.gru = nn.GRU(config.embedding_dim, config.hidden_dim_lstm, num_layers=config.num_layers, batch_first=True, bidirectional=True,
                           dropout=config.dropout_lstm)
         self.attention_layer = Attention(config)
-        self.classifier = nn.Linear(config.hidden_dim_lstm, config.num_relations)
+        self.classifier = nn.Linear(config.hidden_dim_lstm*2, config.num_relations)
     
     def forward(self, data_item, is_test=False):
         # embeddings = torch.cat((self.word_embedding(data_item['sentences']),
@@ -67,12 +72,15 @@ class AttBiLSTM(nn.Module):
         if self.config.use_dropout:
             embeddings = self.dropout(embeddings)
         hidden_init = torch.randn(2 * self.num_layers, self.batch_size, self.hidden_dim)
+        if USE_CUDA:
+            hidden_init = hidden_init.cuda()
         output, h_n = self.gru(embeddings, hidden_init)
         attention_output = self.attention_layer(output)
         # hidden_cls = torch.tanh(attention_output)
+        output_cls = self.classifier(attention_output)
         if not is_test:
-            loss = F.cross_entropy(attention_output, data_item['relation'])  # loss = F.cross_entropy(attention_output, data_item['relation'])
-
+            loss = F.cross_entropy(output_cls, data_item['relation'])  # loss = F.cross_entropy(attention_output, data_item['relation'])
+            # loss /= self.config.batch_size
         pred = attention_output.argmax(dim=-1)
         if is_test:
             return pred

@@ -87,7 +87,7 @@ class ModelDataPreparation:
                 text_rid.append(token)
         return text_rid
     
-    def get_type_rel2id(self):
+    def get_type2id(self):
         self.token_type2id = {}
         for i, token_type in enumerate(self.config.token_types):
             self.token_type2id[token_type] = i
@@ -134,7 +134,7 @@ class ModelDataPreparation:
                 if not is_test:
                     item['token_type_list'] = [self.token_type2id[x] for x in item['token_type_list']]
                 item['text'] = ''.join(text_tokened)  # 保存消除异常词汇的文本
-                item['spo_list'] = data_item['spo_list']
+                item['spo_list'] = spo_list
                 item['token_type_origin'] = token_type_origin
                 data.append(item)
         dataset = Dataset(data)
@@ -148,7 +148,7 @@ class ModelDataPreparation:
         )
         return data_loader
          
-    def get_train_dev_data(self, path_train, path_dev=None, path_test=None):
+    def get_train_dev_data(self, path_train=None, path_dev=None, path_test=None):
         train_loader, dev_loader, test_loader = None, None, None
         if path_train is not None:
             train_loader = self.get_data(path_train)
@@ -240,7 +240,7 @@ class Dataset(torch.utils.data.Dataset):
         return data_info
 
 if __name__ == '__main__':
-    config = Config()
+    config = ConfigN()
     process = ModelDataPreparation(config)
     train_loader, dev_loader, test_loader = process.get_train_dev_data('../data/train_small.json')
     # train_loader, dev_loader, test_loader = process.get_train_dev_data('../data/train_data_small.json')

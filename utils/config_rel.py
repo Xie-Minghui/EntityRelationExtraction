@@ -63,7 +63,7 @@ class ConfigRel:
         self.use_dropout = True
         self.threshold_rel = 0.95  # 从0.7到0.95
         self.teach_rate = 0.2
-        self.ner_checkpoint_path = '../models/sequence_labeling/'
+        self.ner_checkpoint_path = '../models/rel_cls/'
         self.pretrained = False
         self.pad_token_id = 0
     

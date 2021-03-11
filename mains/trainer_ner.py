@@ -126,15 +126,12 @@ class Trainer:
         pbar = tqdm(enumerate(self.test_dataset), total=len(self.test_dataset))
         for i, data_item in pbar:
             pred_ner = self.model(data_item, is_test=True)
-        # print("TEST NER:")
-        # print(pred_ner)
-        # print("TEST REL:")
-        # print(pred_rel)
         self.model.train(True)
-        token_pred = []
-        for i in pred_ner:
-            token_pred.append(self.id2token_type[i])
-        return pred_ner
+        token_pred = [[] for _ in range(len(pred_ner))]
+        for i in range(len(pred_ner)):
+            for item in pred_ner[i]:
+                token_pred[i].append(self.id2token_type[item])
+        return token_pred
 
     def predict_sample(self):
         print('STARTING TESTING...')

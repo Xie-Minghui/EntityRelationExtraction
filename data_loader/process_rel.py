@@ -19,7 +19,7 @@ class DataPreparationRel:
     def __init__(self, config):
         self.config = config
     
-    def get_data(self, file_path):
+    def get_data(self, file_path, is_test=False):
         data = []
         cnt = 0
         with open(file_path, 'r', encoding='utf-8')as f:
@@ -33,7 +33,10 @@ class DataPreparationRel:
                 for spo_item in spo_list:
                     subject = spo_item["subject"]
                     object = spo_item["object"]
-                    relation = spo_item['predicate']
+                    if not is_test:
+                        relation = spo_item['predicate']
+                    else:
+                        relation = []
                     sentence_cls = '$'.join([subject, object, text.replace(subject, '#'*len(subject)).replace(object, '#')])
 
                 
@@ -42,6 +45,8 @@ class DataPreparationRel:
                 data.append(item)
         
         dataset = Dataset(data)
+        if is_test:
+            dataset.is_test = True
         data_loader = torch.utils.data.DataLoader(
             dataset=dataset,
             batch_size=self.config.batch_size,
@@ -51,14 +56,14 @@ class DataPreparationRel:
         
         return data_loader
 
-    def get_train_dev_data(self, path_train, path_dev=None, path_test=None):
+    def get_train_dev_data(self, path_train=None, path_dev=None, path_test=None, is_test=False):
         train_loader, dev_loader, test_loader = None, None, None
         if path_train is not None:
             train_loader = self.get_data(path_train)
         if path_dev is not None:
             dev_loader = self.get_data(path_dev)
         if path_test is not None:
-            test_loader = self.get_data(path_test)
+            test_loader = self.get_data(path_test, is_test=True)
     
         return train_loader, dev_loader, test_loader
     
@@ -67,7 +72,7 @@ class Dataset(torch.utils.data.Dataset):
     def __init__(self, data):
         self.data = copy.deepcopy(data)
         self.is_test = False
-        with open('../data/rel2id.json') as f:
+        with open('../data/rel2id.json', 'r', encoding='utf-8') as f:
             self.rel2id = json.load(f)
         vocab_file = '../bert-base-chinese/vocab.txt'
         self.bert_tokenizer = BertTokenizer.from_pretrained(vocab_file)
@@ -112,17 +117,21 @@ class Dataset(torch.utils.data.Dataset):
 
         # 转化为数值
         sentence_cls = [self.bert_tokenizer.encode(sentence) for sentence in item_info['sentence_cls']]
-        relation = torch.Tensor([self.rel2id[rel] for rel in item_info['relation']]).to(torch.int64)
+        if not self.is_test:
+            relation = torch.Tensor([self.rel2id[rel] for rel in item_info['relation']]).to(torch.int64)
         
         # 批量数据对齐
         sentence_cls, mask_tokens = merge(sentence_cls)
-        
+
         if USE_CUDA:
             sentence_cls = sentence_cls.contiguous().cuda()
-            relation = relation.contiguous().cuda()
         else:
             sentence_cls = sentence_cls.contiguous()
-            relation = relation.contiguous()
+        if not self.is_test:
+            if USE_CUDA:
+                relation = relation.contiguous().cuda()
+            else:
+                relation = relation.contiguous()
 
         data_info = {"mask_tokens": mask_tokens.to(torch.uint8)}
         data_info['text'] = item_info['text']
@@ -136,7 +145,7 @@ class Dataset(torch.utils.data.Dataset):
         
         
 if __name__ == '__main__':
-    config = Config()
+    config = ConfigRel()
     process = DataPreparationRel(config)
     train_loader, dev_loader, test_loader = process.get_train_dev_data('../data/train_small.json')
     
