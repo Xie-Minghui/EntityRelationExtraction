@@ -112,7 +112,7 @@ class Dataset(torch.utils.data.Dataset):
 
         # 转化为数值
         sentence_cls = [self.bert_tokenizer.encode(sentence) for sentence in item_info['sentence_cls']]
-        relation = torch.Tensor([self.rel2id[rel] for rel in item_info['relation']])
+        relation = torch.Tensor([self.rel2id[rel] for rel in item_info['relation']]).to(torch.int64)
         
         # 批量数据对齐
         sentence_cls, mask_tokens = merge(sentence_cls)

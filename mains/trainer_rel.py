@@ -58,12 +58,12 @@ class Trainer:
 
                 loss_rel_total += loss_rel
 
-            print("train ner loss: {0}".format(loss_rel_total / self.num_sample_total * self.config.batch_size))
+            print("train rel loss: {0}".format(loss_rel_total / (self.num_sample_total * self.config.batch_size)))
             
             if (epoch + 1) % 2 == 0:
                 loss_rel_ave = self.evaluate()
                 
-            if epoch > 8 and (epoch+1) % 2 == 0:
+            if epoch > 8 and (epoch+1) % 4 == 0:
                 if loss_rel_ave < loss_eval_best:
                     loss_eval_best = loss_rel_ave
                     torch.save({
@@ -79,7 +79,7 @@ class Trainer:
         self.model.train(False)
         pbar_dev = tqdm(enumerate(self.dev_dataset), total=len(self.dev_dataset))
     
-        loss_rel_total = 0, 0
+        loss_rel_total = 0
         for i, data_item in pbar_dev:
             loss_rel, pred_rel = self.model(data_item)
             loss_rel_total += loss_rel
@@ -88,9 +88,9 @@ class Trainer:
         loss_rel_ave = loss_rel_total / (len(self.dev_dataset) * self.config.batch_size)
         print("eval ner loss: {0}".format(loss_rel_ave))
         
-        print(data_item['text'][0])
-        print("subject: {0}, object：{1}".format(data_item['subject'][0], data_item['object'][0]))
-        print("predicted rel: {}".format(self.id2rel[data_item['relation'][0]]))
+        print(data_item['text'][1])
+        print("subject: {0}, object：{1}".format(data_item['subject'][1], data_item['object'][1]))
+        print("predicted rel: {}".format(self.id2rel[int(data_item['relation'][1])]))
         return loss_rel_ave
     
     def get_id2rel(self):
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     model = AttBiLSTM(config)
     data_processor = DataPreparationRel(config)
     train_loader, dev_loader, test_loader = data_processor.get_train_dev_data(
-        '../data/train_data_small.json',
+        '../data/train_small.json',
     '../data/dev_small.json',
     '../data/predict.json')
     # train_loader, dev_loader, test_loader = data_processor.get_train_dev_data('../data/train_data_small.json')

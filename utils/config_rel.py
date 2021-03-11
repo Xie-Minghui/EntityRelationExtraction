@@ -24,7 +24,7 @@ class Config:
                  vocab_size=22000,
                  embedding_dim=32,
                  hidden_dim_lstm=128,
-                 num_layers=3,
+                 num_layers=2,
                  batch_size=32,
                  layer_size=128,
                  token_type_dim=8

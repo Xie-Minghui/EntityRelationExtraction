@@ -1,5 +1,6 @@
 data/
 models/
+bert-base-chinese/
 .idea/
 # Byte-compiled / optimized / DLL files
 __pycache__/
