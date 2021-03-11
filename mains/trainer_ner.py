@@ -33,22 +33,20 @@ class Trainer:
                  train_dataset=None,
                  dev_dataset=None,
                  test_dataset=None,
-                 token2id=None
                  ):
         self.model = model
         self.train_dataset = train_dataset
         self.dev_dataset = dev_dataset
         self.test_dataset = test_dataset
         self.config = config
-        self.token2id = token2id
         
+        if USE_CUDA:
+            self.model = self.model.cuda()
         # 初始优化器
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config.lr)
         # 学习率调控
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=0.5,
                                                                    patience=8, min_lr=1e-5, verbose=True)
-        if USE_CUDA:
-            self.model = self.model.cuda()
         self.get_id2token_type()
 
     def get_id2token_type(self):
@@ -59,7 +57,7 @@ class Trainer:
     def train(self):
         print('STARTING TRAIN...')
         f1_ner_total_best = 0.0
-        self.num_sample_total = len(train_loader) * self.config.batch_size
+        self.num_sample_total = len(self.train_dataset) * self.config.batch_size
         for epoch in range(self.config.epochs):
             print("Epoch: {}".format(epoch))
             pbar = tqdm(enumerate(self.train_dataset), total=len(self.train_dataset))
@@ -79,7 +77,7 @@ class Trainer:
             if epoch > 8 and f1_ner_total >= f1_ner_total_best:
                 f1_ner_total_best = f1_ner_total
                 torch.save({
-                    'epoch': epoch+1, 'state_dict': model.state_dict(), 'f1_best': f1_ner_total,
+                    'epoch': epoch+1, 'state_dict': self.model.state_dict(), 'f1_best': f1_ner_total,
                     'optimizer': self.optimizer.state_dict(),
                 },
                 self.config.ner_checkpoint_path + str(epoch) + 'm-' + 'f'+str("%.2f"%f1_ner_total) + 'n'+
@@ -117,10 +115,10 @@ class Trainer:
         for i, data_item in pbar_dev:
             loss_ner, pred_ner = self.model(data_item)
             loss_ner_total += loss_ner
-        print("eval ner loss: {0}".format(loss_ner_total))
-        self.model.train(True)
         
-        return loss_ner_total / (len(self.dev_dataset) * self.config.batch_size)
+        self.model.train(True)
+        print("eval ner loss: {0}".format(loss_ner_total / (len(self.dev_dataset) * self.config.batch_size)))
+        # return loss_ner_total / (len(self.dev_dataset) * self.config.batch_size)
     
     def predict(self):
         print('STARTING TESTING...')
@@ -153,7 +151,7 @@ class Trainer:
         
         
 if __name__ == '__main__':
-    print("Run EntityRelationExtraction...")
+    print("Run EntityRelationExtraction NER ...")
     config = Config()
     model = SeqLabel(config)
     data_processor = ModelDataPreparation(config)
@@ -162,5 +160,5 @@ if __name__ == '__main__':
     '../data/dev_small.json',
     '../data/predict.json')
     # train_loader, dev_loader, test_loader = data_processor.get_train_dev_data('../data/train_data_small.json')
-    trainer = Trainer(model, config, train_loader, dev_loader, test_loader, data_processor.token2id)
+    trainer = Trainer(model, config, train_loader, dev_loader, test_loader)
     trainer.train()

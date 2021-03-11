@@ -67,7 +67,7 @@ class SeqLabel(nn.Module):
         
         return ans
     
-    def forward(self, data_item, is_test=False, hidden_init=None):
+    def forward(self, data_item, is_test=False):
         # 因为不是多跳机制，所以hidden_init不能继承之前的最终隐含态
         '''
         

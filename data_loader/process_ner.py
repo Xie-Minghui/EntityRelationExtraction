@@ -24,7 +24,7 @@ import numpy as np
 class ModelDataPreparation:
     def __init__(self, config):
         self.config = config
-        self.get_type_rel2id()
+        self.get_type2id()
     
     def subject_object_labeling(self, spo_list, text, text_tokened):
         # 在列表 k 中确定列表 q 的位置
@@ -91,10 +91,6 @@ class ModelDataPreparation:
         self.token_type2id = {}
         for i, token_type in enumerate(self.config.token_types):
             self.token_type2id[token_type] = i
-        
-        self.rel2id = {}
-        for i, rel in enumerate(self.config.relations):
-            self.rel2id[rel] = i
         # with open('token_type2id.json', 'w', encoding='utf-8') as f:
         #     json.dump(self.token_type2id, f, ensure_ascii=False)
         # with open('rel2id.json', 'w', encoding='utf-8') as f:
@@ -141,7 +137,6 @@ class ModelDataPreparation:
                 item['spo_list'] = data_item['spo_list']
                 item['token_type_origin'] = token_type_origin
                 data.append(item)
-        # print(len(data))
         dataset = Dataset(data)
         if is_test:
             dataset.is_test = True
