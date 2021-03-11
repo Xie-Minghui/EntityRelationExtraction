@@ -59,7 +59,7 @@ class Config:
         self.use_dropout = True
         self.threshold_rel = 0.95  # 从0.7到0.95
         self.teach_rate = 0.2
-        self.checkpoint_path = '../models/'
+        self.ner_checkpoint_path = '../models/sequence_labeling/'
     
     def get_token_types(self):
         token_type_bio = []
