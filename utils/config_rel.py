@@ -17,7 +17,7 @@ else:
     USE_CUDA = False
 
 
-class Config:
+class ConfigRel:
     def __init__(self,
                  lr=0.001,
                  epochs=100,

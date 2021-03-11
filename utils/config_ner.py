@@ -2,7 +2,7 @@
 
 # @Author  : xmh
 # @Time    : 2021/3/3 20:42
-# @File    : config.py
+# @File    : config_ner.py
 
 """
 file description:：
@@ -17,7 +17,7 @@ else:
     USE_CUDA = False
 
 
-class Config:
+class ConfigNer:
     def __init__(self,
                  lr=0.001,
                  epochs=100,

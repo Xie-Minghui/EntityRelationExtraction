@@ -15,7 +15,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm
-from utils.config import Config, USE_CUDA
+from utils.config_ner import ConfigNer, USE_CUDA
 from modules.model_ner import SeqLabel
 from data_loader.process_ner import ModelDataPreparation
 import math
@@ -121,16 +121,20 @@ class Trainer:
         # return loss_ner_total / (len(self.dev_dataset) * self.config.batch_size)
     
     def predict(self):
-        print('STARTING TESTING...')
+        print('STARTING PREDICTING...')
         self.model.train(False)
         pbar = tqdm(enumerate(self.test_dataset), total=len(self.test_dataset))
         for i, data_item in pbar:
-            pred_ner, pred_rel = self.model(data_item, is_test=True)
-        print("TEST NER:")
-        print(pred_ner)
-        print("TEST REL:")
-        print(pred_rel)
+            pred_ner = self.model(data_item, is_test=True)
+        # print("TEST NER:")
+        # print(pred_ner)
+        # print("TEST REL:")
+        # print(pred_rel)
         self.model.train(True)
+        token_pred = []
+        for i in pred_ner:
+            token_pred.append(self.id2token_type[i])
+        return pred_ner
 
     def predict_sample(self):
         print('STARTING TESTING...')
@@ -152,7 +156,7 @@ class Trainer:
         
 if __name__ == '__main__':
     print("Run EntityRelationExtraction NER ...")
-    config = Config()
+    config = ConfigNer()
     model = SeqLabel(config)
     data_processor = ModelDataPreparation(config)
     train_loader, dev_loader, test_loader = data_processor.get_train_dev_data(

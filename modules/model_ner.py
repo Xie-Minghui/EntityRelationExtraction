@@ -13,7 +13,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchcrf import CRF
 import numpy as np
-from utils.config import USE_CUDA
+from utils.config_ner import USE_CUDA
 
 def setup_seed(seed):
     torch.manual_seed(seed)

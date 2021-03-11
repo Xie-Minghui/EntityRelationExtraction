@@ -25,7 +25,7 @@ class Attention(nn.Module):
         attention_prob = torch.matmul(M, self.query.transpose(-1, -2))  # [batch_size, sentence_length, 1]
         alpha = F.softmax(attention_prob,dim=-1)
         attention_output = torch.matmul(alpha.transpose(-1, -2), H)  # [batch_size, 1, hidden_dim_lstm]
-        attention_output = attention_output.squeeze()
+        attention_output = attention_output.squeeze(axis=1)
         attention_output = torch.tanh(attention_output)
         return attention_output
 

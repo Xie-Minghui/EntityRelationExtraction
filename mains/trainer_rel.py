@@ -15,7 +15,7 @@ sys.path.append('/home/xieminghui/Projects/EntityRelationExtraction/')
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-from utils.config_rel import Config, USE_CUDA
+from utils.config_rel import ConfigRel, USE_CUDA
 from modules.model_rel import AttBiLSTM
 from data_loader.process_rel import DataPreparationRel
 
@@ -101,7 +101,7 @@ class Trainer:
 
 if __name__ == '__main__':
     print("Run EntityRelationExtraction REL ...")
-    config = Config()
+    config = ConfigRel()
     model = AttBiLSTM(config)
     data_processor = DataPreparationRel(config)
     train_loader, dev_loader, test_loader = data_processor.get_train_dev_data(

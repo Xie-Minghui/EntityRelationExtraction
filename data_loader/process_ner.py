@@ -17,7 +17,7 @@ file description:：
 import json
 import torch
 import copy
-from utils.config import Config, USE_CUDA
+from utils.config_ner import ConfigNer, USE_CUDA
 import numpy as np
 
 

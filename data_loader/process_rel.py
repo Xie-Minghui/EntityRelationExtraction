@@ -10,7 +10,7 @@ file description:：
 """
 import json
 import torch
-from utils.config_rel import Config, USE_CUDA
+from utils.config_rel import ConfigRel, USE_CUDA
 import copy
 from pytorch_transformers import BertTokenizer
 
