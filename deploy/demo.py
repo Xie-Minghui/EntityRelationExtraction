@@ -55,7 +55,7 @@ def test():
     # test_path = './test.json'
     # PATH_NER = '../models/sequence_labeling/60m-f589.90n40236.67ccks2019_ner.pth'
     # config_ner = ConfigNer()
-    # config_ner.batch_size = 1
+    # # config_ner.batch_size = 1
     # ner_model = SeqLabel(config_ner)
     # ner_model_dict = torch.load(PATH_NER)
     # ner_model.load_state_dict(ner_model_dict['state_dict'])
@@ -84,7 +84,7 @@ def test():
     #                 rel_list.append({"text":texti, "spo_list":{"subject": entities[i][j], "object": entities[i][k]}})
     #     json.dump(rel_list, f, ensure_ascii=False)
 
-    PATH_REL = '../models/rel_cls/1m-loss0.03ccks2019_rel.pth'
+    PATH_REL = '../models/rel_cls/15m-loss0.13ccks2019_rel.pth'
     config_rel = ConfigRel()
     config_rel.batch_size = 6
     rel_model = AttBiLSTM(config_rel)

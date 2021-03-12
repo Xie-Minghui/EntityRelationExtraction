@@ -8,6 +8,8 @@
 file description:：
 
 """
+
+# coding=utf-8
 import sys
 sys.path.append('/home/xieminghui/Projects/EntityRelationExtraction/')
 
@@ -18,6 +20,8 @@ from tqdm import tqdm
 from utils.config_rel import ConfigRel, USE_CUDA
 from modules.model_rel import AttBiLSTM
 from data_loader.process_rel import DataPreparationRel
+import numpy as np
+import codecs
 
 
 class Trainer:
@@ -60,7 +64,7 @@ class Trainer:
 
             print("train rel loss: {0}".format(loss_rel_total / self.num_sample_total))
             
-            if (epoch + 1) % 2 == 0:
+            if (epoch + 1) % 1 == 0:
                 loss_rel_ave = self.evaluate()
                 
             if epoch > 0 and (epoch+1) % 2 == 0:
@@ -91,7 +95,7 @@ class Trainer:
         print(data_item['text'][1])
         print("subject: {0}, object：{1}".format(data_item['subject'][1], data_item['object'][1]))
         print("object rel: {}".format(self.id2rel[int(data_item['relation'][1])]))
-        print("predict rel: {}".format(self.id2rel[pred_rel[1]]))
+        print("predict rel: {}".format(self.id2rel[int(pred_rel[1])]))
         return loss_rel_ave
     
     def get_id2rel(self):
@@ -112,14 +116,52 @@ class Trainer:
             rel_pred[i].append(self.id2rel[int(pred_rel[i])])
         return rel_pred
 
+def get_embedding_pre():
+    # token2id = {}
+    # with open('../data/vocab.txt', 'r', encoding='utf-8') as f:
+    #     cnt = 0
+    #     for line in f:
+    #         line = line.rstrip().split()
+    #         token2id[line[0]] = cnt
+    #         cnt += 1
+
+    word2id = {}
+    with codecs.open('../data/vec.txt', 'r', encoding='utf-8') as f:
+        cnt = 0
+        for line in f.readlines():
+            word2id[line.split()[0]] = cnt
+            cnt += 1
+
+    word2vec = {}
+    with codecs.open('../data/vec.txt', 'r', encoding='utf-8') as f:
+        for line in f.readlines():
+            word2vec[line.split()[0]] = list(map(eval, line.split()[1:]))
+        unkown_pre = []
+        unkown_pre.extend([1]*100)
+    embedding_pre = []
+    embedding_pre.append(unkown_pre)
+    for word in word2id:
+        if word in word2vec:
+            embedding_pre.append(word2vec[word])
+        else:
+            embedding_pre.append(unkown_pre)
+    embedding_pre = np.array(embedding_pre)
+    return embedding_pre
+
+
 
 if __name__ == '__main__':
+    # PATH_NER = '../models/sequence_labeling/60m-f589.90n40236.67ccks2019_ner.pth'
+    # ner_model_dict = torch.load(PATH_NER)
+
     print("Run EntityRelationExtraction REL ...")
     config = ConfigRel()
-    model = AttBiLSTM(config)
+    embedding_pre = get_embedding_pre()
+    # embedding_pre = ner_model_dict['state_dict']['word_embedding.weight']
+    model = AttBiLSTM(config, embedding_pre)
     data_processor = DataPreparationRel(config)
     train_loader, dev_loader, test_loader = data_processor.get_train_dev_data(
-        '../data/train_data_small.json',
+        '../data/train_small.json',
     '../data/dev_small.json',
     '../data/predict.json')
     # train_loader, dev_loader, test_loader = data_processor.get_train_dev_data('../data/train_data_small.json')

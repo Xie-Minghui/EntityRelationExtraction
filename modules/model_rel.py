@@ -22,7 +22,7 @@ class Attention(nn.Module):
     def __init__(self, config):
         super().__init__()
         setup_seed(1)
-        self.query = nn.Parameter(torch.randn(1, config.hidden_dim_lstm*2))  # [batch, 1, hidden_dim]
+        self.query = nn.Parameter(torch.randn(1, config.hidden_dim_lstm))  # [batch, 1, hidden_dim]
     
     def forward(self, H):
         M = torch.tanh(H)  # H [batch_size, sentence_length, hidden_dim_lstm]
@@ -46,12 +46,18 @@ class AttBiLSTM(nn.Module):
         self.dropout = nn.Dropout(config.dropout_embedding)
         self.pretrained = config.pretrained
         self.config = config
+        self.relation_embed_layer = nn.Embedding(config.num_relations, self.hidden_dim)
+        self.relations = torch.Tensor([i for i in range(config.num_relations)])
+        if USE_CUDA:
+            self.relations = self.relations.cuda()
+        self.relation_bias = nn.Parameter(torch.randn(config.num_relations))
         
         assert (self.pretrained is True and embedding_pre is not None) or \
                (self.pretrained is False and embedding_pre is None), "预训练必须有训练好的embedding_pre"
         # 定义网络层
         # 对于关系抽取，命名实体识别和关系抽取共享编码层
         if self.pretrained:
+            # self.word_embedding = nn.Embedding.from_pretrained(torch.FloatTensor(embedding_pre), freeze=False)
             self.word_embedding = nn.Embedding.from_pretrained(torch.FloatTensor(embedding_pre), freeze=False)
         else:
             self.word_embedding = nn.Embedding(config.vocab_size, config.embedding_dim, padding_idx=config.pad_token_id)
@@ -61,7 +67,14 @@ class AttBiLSTM(nn.Module):
         self.gru = nn.GRU(config.embedding_dim, config.hidden_dim_lstm, num_layers=config.num_layers, batch_first=True, bidirectional=True,
                           dropout=config.dropout_lstm)
         self.attention_layer = Attention(config)
-        self.classifier = nn.Linear(config.hidden_dim_lstm*2, config.num_relations)
+        # self.classifier = nn.Linear(config.hidden_dim_lstm, config.num_relations)
+
+        if USE_CUDA:
+            self.weights_rel = (torch.ones(self.config.num_relations) * 10).cuda()
+        else:
+            self.weights_rel = torch.ones(self.config.num_relations) * 10
+        # self.weights_rel[9], self.weights_rel[13], self.weights_rel[14], self.weights_rel[46] = 100, 100, 100, 100
+        self.weights_rel[0] = 1
     
     def forward(self, data_item, is_test=False):
         # embeddings = torch.cat((self.word_embedding(data_item['sentences']),
@@ -75,13 +88,18 @@ class AttBiLSTM(nn.Module):
         if USE_CUDA:
             hidden_init = hidden_init.cuda()
         output, h_n = self.gru(embeddings, hidden_init)
-        attention_output = self.attention_layer(output)
+        attention_input = output[:, :, :self.hidden_dim] + output[:, :, self.hidden_dim:]
+        attention_output = self.attention_layer(attention_input)
         # hidden_cls = torch.tanh(attention_output)
-        output_cls = self.classifier(attention_output)
+        # output_cls = self.classifier(attention_output)
+        relation_embeds = self.relation_embed_layer(self.relations.to(torch.int64))
+        res = torch.add(torch.matmul(attention_output, relation_embeds.transpose(-1, -2)), self.relation_bias)
+
         if not is_test:
-            loss = F.cross_entropy(output_cls, data_item['relation'])  # loss = F.cross_entropy(attention_output, data_item['relation'])
+            loss = F.cross_entropy(res, data_item['relation'], self.weights_rel)  # loss = F.cross_entropy(attention_output, data_item['relation'])
             # loss /= self.config.batch_size
-        pred = attention_output.argmax(dim=-1)
+        res = F.softmax(res, -1)
+        pred = res.argmax(dim=-1)
         if is_test:
             return pred
         return loss, pred

@@ -13,6 +13,7 @@ import torch
 from utils.config_rel import ConfigRel, USE_CUDA
 import copy
 from pytorch_transformers import BertTokenizer
+import codecs
 
 
 class DataPreparationRel:
@@ -33,16 +34,28 @@ class DataPreparationRel:
                 for spo_item in spo_list:
                     subject = spo_item["subject"]
                     object = spo_item["object"]
+                    # 增加位置信息
+                    # index_s = text.index(subject)
+                    # index_o = text.index(object)
+                    # position_s, position_o = [], []
+                    # for i, word in enumerate(text):
+                    #     position_s.append(i-index_s)
+                    #     position_o.append(i-index_o)
                     if not is_test:
                         relation = spo_item['predicate']
                     else:
                         relation = []
-                    sentence_cls = '$'.join([subject, object, text.replace(subject, '#'*len(subject)).replace(object, '#')])
-
-                
-                item = {'sentence_cls': sentence_cls, 'relation': relation, 'text': text,
-                        'subject': subject, 'object': object}
-                data.append(item)
+                    # sentence_cls = '$'.join([subject, object, text.replace(subject, '#'*len(subject)).replace(object, '#')])
+                    sentence_cls = '$'.join([subject, object, text])
+                    # sentence_cls = text
+                    item = {'sentence_cls': sentence_cls, 'relation': relation, 'text': text,
+                            'subject': subject, 'object': object}
+                    data.append(item)
+                # 添加负样本
+                sentence_neg = '$'.join([object, subject, text])
+                item_neg = {'sentence_cls': sentence_neg, 'relation': 'N', 'text': text,
+                            'subject': object, 'object': subject}
+                data.append(item_neg)
         
         dataset = Dataset(data)
         if is_test:
@@ -51,6 +64,7 @@ class DataPreparationRel:
             dataset=dataset,
             batch_size=self.config.batch_size,
             collate_fn=dataset.collate_fn,
+            # shuffle=True,
             drop_last=True
         )
         
@@ -74,9 +88,19 @@ class Dataset(torch.utils.data.Dataset):
         self.is_test = False
         with open('../data/rel2id.json', 'r', encoding='utf-8') as f:
             self.rel2id = json.load(f)
-        vocab_file = '../bert-base-chinese/vocab.txt'
-        self.bert_tokenizer = BertTokenizer.from_pretrained(vocab_file)
-    
+        # vocab_file = '../bert-base-chinese/vocab.txt'
+        # self.bert_tokenizer = BertTokenizer.from_pretrained(vocab_file)
+        vocab_file = '../data/vec.txt'
+        self.get_token2id()
+
+    def get_token2id(self):
+        self.word2id = {}
+        with codecs.open('../data/vec.txt', 'r', encoding='utf-8') as f:
+            cnt = 0
+            for line in f.readlines():
+                self.word2id[line.split()[0]] = cnt
+                cnt += 1
+
     def __getitem__(self, index):
         sentence_cls = self.data[index]['sentence_cls']
         relation = self.data[index]['relation']
@@ -116,7 +140,15 @@ class Dataset(torch.utils.data.Dataset):
             item_info[key] = [d[key] for d in data_batch]
 
         # 转化为数值
-        sentence_cls = [self.bert_tokenizer.encode(sentence) for sentence in item_info['sentence_cls']]
+        # sentence_cls = [self.bert_tokenizer.encode(sentence) for sentence in item_info['sentence_cls']]
+        sentence_cls = [[] for _ in range(len(item_info['sentence_cls']))]
+        for i, sentence in enumerate(item_info['sentence_cls']):
+            tmp = []
+            for c in sentence:
+                if c in self.word2id:
+                    tmp.append(self.word2id[c])
+            sentence_cls[i] = tmp
+
         if not self.is_test:
             relation = torch.Tensor([self.rel2id[rel] for rel in item_info['relation']]).to(torch.int64)
         

@@ -19,10 +19,10 @@ else:
 
 class ConfigRel:
     def __init__(self,
-                 lr=0.001,
+                 lr=0.0005,
                  epochs=100,
                  vocab_size=22000,
-                 embedding_dim=32,
+                 embedding_dim=100,
                  hidden_dim_lstm=128,
                  num_layers=2,
                  batch_size=32,
@@ -64,7 +64,7 @@ class ConfigRel:
         self.threshold_rel = 0.95  # 从0.7到0.95
         self.teach_rate = 0.2
         self.ner_checkpoint_path = '../models/rel_cls/'
-        self.pretrained = False
+        self.pretrained = True
         self.pad_token_id = 0
     
     def get_token_types(self):
