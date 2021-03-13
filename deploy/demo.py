@@ -19,6 +19,8 @@ from data_loader.process_rel import DataPreparationRel
 
 from mains import trainer_ner, trainer_rel
 import json
+from transformers import BertForSequenceClassification
+
 
 def get_entities(pred_ner, text):
     token_types = [[] for _ in range(len(pred_ner))]
@@ -84,10 +86,12 @@ def test():
     #                 rel_list.append({"text":texti, "spo_list":{"subject": entities[i][j], "object": entities[i][k]}})
     #     json.dump(rel_list, f, ensure_ascii=False)
 
-    PATH_REL = '../models/rel_cls/15m-loss0.13ccks2019_rel.pth'
+    PATH_REL = '../models/rel_cls/25m-acc0.93ccks2019_rel.pth'
+
     config_rel = ConfigRel()
-    config_rel.batch_size = 6
-    rel_model = AttBiLSTM(config_rel)
+    config_rel.batch_size = 8
+    rel_model = BertForSequenceClassification.from_pretrained('../bert-base-chinese', num_labels=config_rel.num_relations)
+    # rel_model = AttBiLSTM(config_rel)
     rel_model_dict = torch.load(PATH_REL)
     rel_model.load_state_dict(rel_model_dict['state_dict'])
     rel_test_path = './rel_predict.json'
@@ -95,7 +99,7 @@ def test():
     rel_data_process = DataPreparationRel(config_rel)
     _, _, test_loader = rel_data_process.get_train_dev_data(path_test=rel_test_path)
     trainREL = trainer_rel.Trainer(rel_model, config_rel, test_dataset=test_loader)
-    rel_pred = trainREL.predict()
+    rel_pred = trainREL.bert_predict()
     print(rel_pred)
 
 
