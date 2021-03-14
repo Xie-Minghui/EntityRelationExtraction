@@ -23,6 +23,7 @@ from data_loader.process_rel import DataPreparationRel
 import numpy as np
 import codecs
 from transformers import BertForSequenceClassification
+import neptune
 
 
 class Trainer:
@@ -63,9 +64,9 @@ class Trainer:
                 self.optimizer.step()
 
                 loss_rel_total += loss_rel
-
-            print("train rel loss: {0}".format(loss_rel_total / self.num_sample_total))
-
+            loss_rel_train_ave = loss_rel_total / self.num_sample_total
+            print("train rel loss: {0}".format(loss_rel_train_ave))
+            # neptune.log_metric("train rel loss", loss_rel_train_ave)
             if (epoch + 1) % 1 == 0:
                 loss_rel_ave = self.evaluate()
 
@@ -140,8 +141,9 @@ class Trainer:
                 correct += pred_rel.data.eq(data_item['relation'].data).cpu().sum().numpy()
 
                 loss_rel_total += loss_rel
-
-            print("train rel loss: {0}".format(loss_rel_total / self.num_sample_total))
+            loss_rel_train_ave = loss_rel_total / self.num_sample_total
+            print("train rel loss: {0}".format(loss_rel_train_ave))
+            # neptune.log_metric("train rel loss", loss_rel_train_ave)
             print("precision_score: {0}".format(correct / self.num_sample_total))
             if (epoch + 1) % 1 == 0:
                 acc_eval = self.bert_evaluate()
@@ -235,6 +237,8 @@ def get_embedding_pre():
 
 
 if __name__ == '__main__':
+    # neptune.init(api_token='ANONYMOUS', project_qualified_name='shared/pytorch-integration')
+    # neptune.create_experiment('pytorch-quickstart')
     print("Run EntityRelationExtraction REL BERT ...")
     config = ConfigRel()
     model = BertForSequenceClassification.from_pretrained('../bert-base-chinese', num_labels=config.num_relations)

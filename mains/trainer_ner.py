@@ -25,6 +25,8 @@ from seqeval.metrics import precision_score
 from seqeval.metrics import accuracy_score
 from seqeval.metrics import recall_score
 from seqeval.metrics import classification_report
+import neptune
+
 
 class Trainer:
     def __init__(self,
@@ -69,8 +71,10 @@ class Trainer:
                 
             if (epoch+1) % 1 == 0:
                 self.predict_sample()
-            print("train ner loss: {0}, f1 score: {1}".format(loss_ner_total/self.num_sample_total,
+            loss_ner_train_ave = loss_ner_total/self.num_sample_total
+            print("train ner loss: {0}, f1 score: {1}".format(loss_ner_train_ave,
                                                         f1_ner_total/self.num_sample_total*self.config.batch_size))
+            neptune.log_metric("train ner loss", loss_ner_train_ave)
             # pbar.set_description('TRAIN LOSS: {}'.format(loss_total/self.num_sample_total))
             if (epoch+1) % 1 == 0:
                 self.evaluate()
@@ -152,12 +156,15 @@ class Trainer:
         
         
 if __name__ == '__main__':
+    neptune.init(api_token='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiNTM3OTQzY2ItMzRhNC00YjYzLWJhMTktMzI0NTk4NmM4NDc3In0=', project_qualified_name='mangopudding/EntityRelationExtraction')
+    
+    neptune.create_experiment('ner_train')
     print("Run EntityRelationExtraction NER ...")
     config = ConfigNer()
     model = SeqLabel(config)
     data_processor = ModelDataPreparation(config)
     train_loader, dev_loader, test_loader = data_processor.get_train_dev_data(
-        '../data/train_data_small.json',
+        '../data/train_small.json',
     '../data/dev_small.json',
     '../data/predict.json')
     # train_loader, dev_loader, test_loader = data_processor.get_train_dev_data('../data/train_data_small.json')
