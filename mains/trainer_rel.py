@@ -66,7 +66,7 @@ class Trainer:
                 loss_rel_total += loss_rel
             loss_rel_train_ave = loss_rel_total / self.num_sample_total
             print("train rel loss: {0}".format(loss_rel_train_ave))
-            # neptune.log_metric("train rel loss", loss_rel_train_ave)
+            neptune.log_metric("train rel loss", loss_rel_train_ave)
             if (epoch + 1) % 1 == 0:
                 loss_rel_ave = self.evaluate()
 
@@ -237,8 +237,10 @@ def get_embedding_pre():
 
 
 if __name__ == '__main__':
-    # neptune.init(api_token='ANONYMOUS', project_qualified_name='shared/pytorch-integration')
-    # neptune.create_experiment('pytorch-quickstart')
+    # neptune.init(
+    #     api_token='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiNTM3OTQzY2ItMzRhNC00YjYzLWJhMTktMzI0NTk4NmM4NDc3In0=',
+    #     project_qualified_name='mangopudding/EntityRelationExtraction')
+    # neptune.create_experiment('rel_train')
     print("Run EntityRelationExtraction REL BERT ...")
     config = ConfigRel()
     model = BertForSequenceClassification.from_pretrained('../bert-base-chinese', num_labels=config.num_relations)

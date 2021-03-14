@@ -74,7 +74,7 @@ class Trainer:
             loss_ner_train_ave = loss_ner_total/self.num_sample_total
             print("train ner loss: {0}, f1 score: {1}".format(loss_ner_train_ave,
                                                         f1_ner_total/self.num_sample_total*self.config.batch_size))
-            neptune.log_metric("train ner loss", loss_ner_train_ave)
+            # neptune.log_metric("train ner loss", loss_ner_train_ave)
             # pbar.set_description('TRAIN LOSS: {}'.format(loss_total/self.num_sample_total))
             if (epoch+1) % 1 == 0:
                 self.evaluate()
@@ -156,9 +156,8 @@ class Trainer:
         
         
 if __name__ == '__main__':
-    neptune.init(api_token='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiNTM3OTQzY2ItMzRhNC00YjYzLWJhMTktMzI0NTk4NmM4NDc3In0=', project_qualified_name='mangopudding/EntityRelationExtraction')
-    
-    neptune.create_experiment('ner_train')
+    # neptune.init(api_token='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiNTM3OTQzY2ItMzRhNC00YjYzLWJhMTktMzI0NTk4NmM4NDc3In0=', project_qualified_name='mangopudding/EntityRelationExtraction')
+    # neptune.create_experiment('ner_train')
     print("Run EntityRelationExtraction NER ...")
     config = ConfigNer()
     model = SeqLabel(config)
