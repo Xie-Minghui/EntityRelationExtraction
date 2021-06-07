@@ -32,16 +32,21 @@
   }]
 }
 
+#####数据集的下载
+链接：https://pan.baidu.com/s/1XK3v6BQlnsvhGxgg-71IpA 
+提取码：nlp0 
 
 #### 使用说明
 
 ##### 训练
+Bert模型使用的是huggingface的Bert-base模型，预训练模型和相关文件见
+https://huggingface.co/bert-base-chinese/tree/main
 
 命名实体部分的训练，直接运行mains/train_ner.py
 
 关系抽取部分的训练，直接运行mains/train_rel.py
 
-trian.py是之前联合抽取的代码，在这个项目作废。
+train.py,config.py是之前联合抽取的代码，在这个项目作废。
 
 ##### 测试
 
