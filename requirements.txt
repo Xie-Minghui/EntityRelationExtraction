@@ -1,0 +1,6 @@
+numpy=1.19.2
+tqdm=4.56.0
+seqeval=1.2.2
+transformers=4.3.2
+pytorch=1.7.1
+pytorch-crf=0.7.2
