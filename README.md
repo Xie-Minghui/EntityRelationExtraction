@@ -54,6 +54,4 @@ train.py,config.py是之前联合抽取的代码，在这个项目作废。
 
 直接运行deploy/demo.py。会首先进行命名实体识别，然后将实体两两组成实体对进行关系分类。
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Xie-Minghui/EntityRelationExtraction
-&type=Timeline)](https://star-history.com/#Xie-Minghui/EntityRelationExtraction
-&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Xie-Minghui/EntityRelationExtraction&type=Timeline)](https://star-history.com/#Xie-Minghui/EntityRelationExtraction&Date)
