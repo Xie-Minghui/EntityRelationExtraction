@@ -1,7 +1,8 @@
 # EntityRelationExtraction
 #### 引流
 
-完整运行demo见我的另一个[仓库](https://github.com/Xie-Minghui/MultiHeadJointEntityRelationExtraction_simple)
+完整的可视化demo见我的另一个[仓库](https://github.com/Xie-Minghui/MultiHeadJointEntityRelationExtraction_simple)
+
 #### 项目说明
 
 项目使用pytorch实现实体关系抽取中的流水线式模型。
